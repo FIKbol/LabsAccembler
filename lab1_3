@@ -1,0 +1,193 @@
+.486
+.model flat, stdcall
+option casemap:none
+
+include windows.inc
+include kernel32.inc
+includelib kernel32.lib
+
+STD_INPUT_HANDLE  equ -10
+STD_OUTPUT_HANDLE equ -11
+
+.data
+; Буферы для ввода (с запасом)
+bufA db 100 dup(" ")
+bufB db 100 dup(" ")
+bufC db 100 dup(" ")
+
+charsRead dd ?
+
+; Дескрипторы
+hInput  dd ?
+hOutput dd ?
+
+; Константы
+ten dd 10
+
+.code
+
+; ------------------------------------------
+; Процедура нормализации строки до 10 символов
+; EBX = адрес строки
+; ------------------------------------------
+normalize proc
+    push ecx
+    push eax
+
+    mov ecx, 10
+fill_loop:
+    cmp byte ptr [ebx+ecx-1], 13
+    je replace_space
+    loop fill_loop
+    jmp done
+
+replace_space:
+    mov byte ptr [ebx+ecx-1], ' '
+
+done:
+    pop eax
+    pop ecx
+    ret
+normalize endp
+
+; ------------------------------------------
+; Вывод 10 символов
+; EBX = адрес строки
+; ------------------------------------------
+print10 proc
+    push 0
+    push offset charsRead
+    push 10
+    push ebx
+    push hOutput
+    call WriteConsoleA
+    ret
+print10 endp
+
+; ------------------------------------------
+start:
+
+    ; Получить дескрипторы
+    push STD_INPUT_HANDLE
+    call GetStdHandle
+    mov hInput, eax
+
+    push STD_OUTPUT_HANDLE
+    call GetStdHandle
+    mov hOutput, eax
+
+    ; ===== Ввод строк =====
+
+    ; A
+    push 0
+    push offset charsRead
+    push 100
+    push offset bufA
+    push hInput
+    call ReadConsoleA
+    mov ebx, offset bufA
+    call normalize
+
+    ; B
+    push 0
+    push offset charsRead
+    push 100
+    push offset bufB
+    push hInput
+    call ReadConsoleA
+    mov ebx, offset bufB
+    call normalize
+
+    ; C
+    push 0
+    push offset charsRead
+    push 100
+    push offset bufC
+    push hInput
+    call ReadConsoleA
+    mov ebx, offset bufC
+    call normalize
+
+    ; ===== Вывод схемы варианта 8 =====
+
+    ; ┌────────────┐
+    push 0
+    push offset charsRead
+    push 14
+    push offset line1
+    push hOutput
+    call WriteConsoleA
+
+    ; │ aaaaaaaaaa │
+    push 0
+    push offset charsRead
+    push 2
+    push offset leftBar
+    push hOutput
+    call WriteConsoleA
+
+    mov ebx, offset bufA
+    call print10
+
+    push 0
+    push offset charsRead
+    push 3
+    push offset rightBarNL
+    push hOutput
+    call WriteConsoleA
+
+    ; │ bbbbbbbbbb │
+    push 0
+    push offset charsRead
+    push 2
+    push offset leftBar
+    push hOutput
+    call WriteConsoleA
+
+    mov ebx, offset bufB
+    call print10
+
+    push 0
+    push offset charsRead
+    push 3
+    push offset rightBarNL
+    push hOutput
+    call WriteConsoleA
+
+    ; │ cccccccccc │
+    push 0
+    push offset charsRead
+    push 2
+    push offset leftBar
+    push hOutput
+    call WriteConsoleA
+
+    mov ebx, offset bufC
+    call print10
+
+    push 0
+    push offset charsRead
+    push 3
+    push offset rightBarNL
+    push hOutput
+    call WriteConsoleA
+
+    ; └────────────┘
+    push 0
+    push offset charsRead
+    push 14
+    push offset line2
+    push hOutput
+    call WriteConsoleA
+
+    push 0
+    call ExitProcess
+
+; ====== Данные для рамки ======
+.data
+line1 db 218,196,196,196,196,196,196,196,196,196,196,196,196,191,13,10
+line2 db 192,196,196,196,196,196,196,196,196,196,196,196,196,217,13,10
+leftBar db 179," "
+rightBarNL db " ",179,13,10
+
+end start
