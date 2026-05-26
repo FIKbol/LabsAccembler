@@ -10,26 +10,19 @@ STD_INPUT_HANDLE  equ -10
 STD_OUTPUT_HANDLE equ -11
 
 .data
-; Буферы для ввода (с запасом)
 bufA db 100 dup(" ")
 bufB db 100 dup(" ")
 bufC db 100 dup(" ")
 
 charsRead dd ?
 
-; Дескрипторы
 hInput  dd ?
 hOutput dd ?
 
-; Константы
 ten dd 10
 
 .code
 
-; ------------------------------------------
-; Процедура нормализации строки до 10 символов
-; EBX = адрес строки
-; ------------------------------------------
 normalize proc
     push ecx
     push eax
@@ -108,8 +101,6 @@ start:
     mov ebx, offset bufC
     call normalize
 
-    ; ===== Вывод схемы варианта 8 =====
-
     ; ┌────────────┐
     push 0
     push offset charsRead
@@ -183,7 +174,6 @@ start:
     push 0
     call ExitProcess
 
-; ====== Данные для рамки ======
 .data
 line1 db 218,196,196,196,196,196,196,196,196,196,196,196,196,191,13,10
 line2 db 192,196,196,196,196,196,196,196,196,196,196,196,196,217,13,10
