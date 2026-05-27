@@ -1,0 +1,35 @@
+; Заполнение массива
+fill proc uses esi ecx
+    mov esi,offset arr
+    mov ecx,10
+    mov eax,-10
+
+L1:
+    mov ebx,eax
+    imul ebx
+    mov [esi],eax
+    add esi,4
+    inc eax
+    loop L1
+    ret
+fill endp
+
+;Модификация
+modify proc uses esi ecx
+    mov esi,offset arr
+    mov ecx,10
+L1:
+    mov eax,[esi]
+    mov edx,0
+    mov ebx,10
+    div ebx
+    cmp edx,6
+    jne skip
+    mov eax,[esi]
+    imul eax,3
+    mov [esi],eax
+skip:
+    add esi,4
+    loop L1
+    ret
+modify endp
