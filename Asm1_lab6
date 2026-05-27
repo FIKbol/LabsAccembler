@@ -1,0 +1,20 @@
+;Сумма всех ключей бинарного дерева
+sumTree proc
+    cmp ecx,0
+    je zero
+
+    push [ecx].left
+    call sumTree
+    mov ebx,eax
+
+    push [ecx].right
+    call sumTree
+
+    add eax,ebx
+    add eax,[ecx].value
+    ret
+
+zero:
+    xor eax,eax
+    ret
+sumTree endp
