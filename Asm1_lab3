@@ -1,0 +1,24 @@
+; Задание 3.1
+; max(x+y, x-y)
+mov eax,x
+add eax,y
+mov ebx,x
+sub ebx,y
+cmp eax,ebx
+jg L1
+mov eax,ebx
+L1:
+mov temp1,eax
+
+; Задание 3.2
+mov eax,a
+mov ebx,b
+
+L1:
+cmp eax,ebx
+jb done
+sub eax,ebx
+jmp L1
+
+done:
+; eax = остаток
