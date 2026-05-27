@@ -1,0 +1,42 @@
+; Задание 5.2
+finit
+fld a
+fdiv b
+fld a
+fsub b
+fld1
+fld1
+fadd
+fadd        ; ST = 3
+fmulp ST(1),ST(0)
+fadd
+fstp result
+
+; Задание 5.3
+fld x
+fld minus1
+fcomip st,st(1)
+jbe first
+
+; второй случай
+fld1
+fld x
+fmul st,st
+fadd
+fsqrt
+fld b
+fld sqrt2
+fdiv
+fsub
+jmp done
+
+first:
+fld a
+fmul x
+fld1
+fadd
+fabs
+fsqrt
+
+done:
+fstp y
