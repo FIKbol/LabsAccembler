@@ -1,0 +1,77 @@
+; задание 2.3
+.486
+.model flat, stdcall
+option casemap:none
+
+include \masm32\include\masm32.inc
+include \masm32\include\kernel32.inc
+includelib \masm32\lib\masm32.lib
+includelib \masm32\lib\kernel32.lib
+
+.data
+    a dd ?
+    b dd ?
+    result dd ?
+    buf db 64 dup(0)
+
+.code
+start:
+
+    print chr$("Enter a: ")
+    call atodw
+    mov a, eax
+
+    print chr$("Enter b: ")
+    call atodw
+    mov b, eax
+
+    ; a / b
+    mov eax, a
+    cdq
+    idiv b        ; eax = a/b
+
+    mov ebx, eax  ; сохранить частное
+
+    ; 3*(a-b)
+    mov eax, a
+    sub eax, b
+    imul eax, 3
+
+    add eax, ebx
+    mov result, eax
+
+    print chr$("Result = ")
+    mov eax, result
+    call dwtoa
+    print eax
+
+    exit
+end start
+
+; Задание 2.4
+; a^15 = a^(8+4+2+1)
+
+mov eax,a
+mov ebx,eax
+imul ebx        ; a^2
+mov ecx,eax
+
+imul ecx        ; a^4
+mov edx,eax
+
+imul edx        ; a^8
+
+; a^15 = a^8 * a^4 * a^2 * a
+imul ecx
+imul ebx
+imul a
+; +512*b
+mov eax,b
+shl eax,9       ; 512*b
+add eax, resultPower
+
+; деление
+mov edx,0
+div c
+; eax = частное, edx = остаток
+add eax, edx
