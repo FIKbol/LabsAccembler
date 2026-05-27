@@ -1,0 +1,188 @@
+.486
+.model flat, stdcall
+option casemap:none
+
+include \masm32\include\masm32.inc
+include \masm32\include\kernel32.inc
+include \masm32\include\masm32rt.inc
+
+includelib \masm32\lib\kernel32.lib
+includelib \masm32\lib\masm32.lib
+
+polygon STRUCT
+    n   DWORD ?
+    a   REAL8 ?
+polygon ENDS
+
+.data
+pi      REAL8 3.1415926535
+four    REAL8 4.0
+
+fmtStr  db "n=%u  a=%.2f",13,10,0
+title1  db 13,10,"Sort by AREA",13,10,0
+title2  db 13,10,"Sort by PERIMETER",13,10,0
+
+array polygon <
+    <3, 5.0>,
+    <4, 3.0>,
+    <6, 2.0>,
+    <5, 4.0>,
+    <8, 2.5>
+>
+
+count equ 5
+
+.code
+
+calcPerimeter PROC uses eax
+    fild DWORD PTR [eax].n
+    fld  QWORD PTR [eax].a
+    fmulp st(1), st(0)
+    ret
+calcPerimeter ENDP
+
+calcArea PROC uses eax
+    fild DWORD PTR [eax].n
+    fld QWORD PTR [eax].a
+    fld st(0)
+    fmulp st(1), st(0)
+    fmulp st(1), st(0)
+
+    fld pi
+    fild DWORD PTR [eax].n
+    fdivp st(1), st(0)
+    fptan
+    fstp st(0)
+    fld four
+    fmulp st(1), st(0)
+
+    fdivp st(1), st(0)
+    ret
+calcArea ENDP
+
+comparePerimeter PROC
+    mov eax, [esp+4]
+    push eax
+    call calcPerimeter
+
+    mov eax, [esp+8]
+    push eax
+    call calcPerimeter
+
+    fcomip st, st(1)
+    fstp st(0)
+    fstp st(0)
+
+    ja greater1
+    xor eax,eax
+    ret 8
+
+greater1:
+    mov eax,1
+    ret 8
+comparePerimeter ENDP
+
+compareArea PROC
+    mov eax, [esp+4]
+    push eax
+    call calcArea
+
+    mov eax, [esp+8]
+    push eax
+    call calcArea
+
+    fcomip st, st(1)
+    fstp st(0)
+    fstp st(0)
+
+    ja greater2
+    xor eax,eax
+    ret 8
+
+greater2:
+    mov eax,1
+    ret 8
+compareArea ENDP
+
+sort PROC uses esi edi ebx ecx edx
+    mov esi, [esp+4]
+    mov ecx, [esp+8]
+    dec ecx
+
+outer:
+    push ecx
+    mov edi, esi
+    mov ebx, ecx
+
+inner:
+    mov eax, edi
+    add eax, SIZEOF polygon
+
+    push eax
+    push edi
+    call [esp+20]
+
+    cmp eax,0
+    je skip
+
+    push ecx
+    mov ecx, SIZEOF polygon
+swapLoop:
+    mov dl, [edi]
+    mov dh, [eax]
+    mov [edi], dh
+    mov [eax], dl
+    inc edi
+    inc eax
+    loop swapLoop
+    pop ecx
+
+skip:
+    add edi, SIZEOF polygon
+    dec ebx
+    jnz inner
+
+    pop ecx
+    loop outer
+    ret 12
+sort ENDP
+
+printArray PROC uses esi ecx
+    mov esi, offset array
+    mov ecx, count
+
+printLoop:
+    push QWORD PTR [esi].a
+    push DWORD PTR [esi].n
+    push offset fmtStr
+    call crt_printf
+    add esp,16
+
+    add esi, SIZEOF polygon
+    loop printLoop
+    ret
+printArray ENDP
+
+start:
+
+    print offset title1
+
+    push offset compareArea
+    push count
+    push offset array
+    call sort
+
+    call printArray
+
+    print offset title2
+
+    push offset comparePerimeter
+    push count
+    push offset array
+    call sort
+
+    call printArray
+
+    exit
+
+END start
